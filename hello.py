@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from flask import Flask, render_template, flash, request
 from flask_migrate import Migrate
@@ -7,6 +7,7 @@ from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, EqualTo
+from wtforms.widgets.core import TextArea
 
 app = Flask(__name__)
 # Add database
@@ -19,6 +20,31 @@ app.config['SECRET_KEY'] = "thisismysupersecretkeyever3498398439843984349"
 # Initialize The Database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+# JSON things
+@app.route('/date')
+def get_current_date():
+    return {"Date": date.today()}
+
+
+# Create a Blog Post Model
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    slug = db.Column(db.String(255))
+
+
+# Create Blog Post Form
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = StringField('Content', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Author', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 # Create Model for Data Base
@@ -198,6 +224,47 @@ def test_pw():
                            pw_to_check=pw_to_check,
                            passed=passed,
                            password=password)
+
+
+# Add a post page
+@app.route('/add-post', methods=['GET', 'POST'])
+def add_post():
+    form = PostForm()
+    try:
+        if form.validate_on_submit():
+            post = Post(title=form.title.data,
+                        content=form.content.data,
+                        author=form.author.data,
+                        slug=form.slug.data)
+
+            # Clear page data
+            form.title.data = ''
+            form.content.data = ''
+            form.author.data = ''
+            form.slug.data = ''
+
+            # Send data to database
+            db.session.add(post)
+            db.session.commit()
+
+            flash("You have successfully send post!")
+    except Exception as e:
+        flash('Error is: ' + str(e))
+
+    return render_template('add_post.html', form=form)
+
+
+@app.route('/posts', methods=['GET', 'POST'])
+def posts():
+    all_posts = Post.query.order_by(Post.date_posted)
+
+    return render_template('posts.html', all_posts=all_posts)
+
+
+@app.route('/post/<int:id>', methods=['GET', 'POST'])
+def post(id):
+    post_id = Post.query.get_or_404(id)
+    return render_template('post.html', post_id=post_id)
 
 
 if __name__ == "__main__":
