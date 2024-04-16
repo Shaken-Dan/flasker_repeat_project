@@ -1,6 +1,6 @@
 from datetime import datetime, date
 
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
@@ -265,6 +265,32 @@ def posts():
 def post(id):
     post_id = Post.query.get_or_404(id)
     return render_template('post.html', post_id=post_id)
+
+
+# Editing the post
+@app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+def edit_post(id):
+    post_edit = Post.query.get_or_404(id)
+    form = PostForm()
+    if form.validate_on_submit():
+        post_edit.title = form.title.data
+        post_edit.author = form.author.data
+        post_edit.slug = form.slug.data
+        post_edit.content = form.content.data
+
+        # Update the database
+        db.session.add(post_edit)
+        db.session.commit()
+        flash('Post has been updated!')
+        return redirect(url_for('post', id=post_edit.id))
+
+    # To show on a screen current data of a post
+    form.title.data = post_edit.title
+    form.author.data = post_edit.author
+    form.slug.data = post_edit.slug
+    form.content.data = post_edit.content
+
+    return render_template('edit_post.html', form=form)
 
 
 if __name__ == "__main__":
