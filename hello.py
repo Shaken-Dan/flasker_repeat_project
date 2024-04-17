@@ -1,6 +1,7 @@
 from datetime import datetime, date
 
 from flask import Flask, render_template, flash, request, redirect, url_for
+from flask_login import UserMixin, LoginManager, login_required, login_user, logout_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
@@ -20,6 +21,16 @@ app.config['SECRET_KEY'] = "thisismysupersecretkeyever3498398439843984349"
 # Initialize The Database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Login Flask Stuff
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
 
 
 # JSON things
@@ -48,9 +59,10 @@ class PostForm(FlaskForm):
 
 
 # Create Model for Data Base
-class Users(db.Model):
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    username = db.Column(db.String(20), unique=True)
     email = db.Column(db.String(200), nullable=False, unique=True)
     favorite_color = db.Column(db.String(200))
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
@@ -78,6 +90,7 @@ class Users(db.Model):
 # Create a form class
 class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
+    username = StringField("Username", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
     favorite_color = StringField("Favorite Color")
     password_hash = PasswordField("Password", validators=[DataRequired(),
@@ -92,6 +105,12 @@ class PasswordForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
     name = None
@@ -104,7 +123,8 @@ def add_user():
             user = Users(name=form.name.data,
                          email=form.email.data,
                          favorite_color=form.favorite_color.data,
-                         password_hash=hashed_pw
+                         password_hash=hashed_pw,
+                         username=form.username.data
                          )
             db.session.add(user)
             db.session.commit()
@@ -113,6 +133,7 @@ def add_user():
             form.email.data = ''
             form.favorite_color.data = ''
             form.password_hash.data = ''
+            form.username.data = ''
 
             flash(f"User {name} added successfully!")  # Improvement suggestion 1
     our_users = Users.query.order_by(Users.date_time)
@@ -291,6 +312,55 @@ def edit_post(id):
     form.content.data = post_edit.content
 
     return render_template('edit_post.html', form=form)
+
+
+@app.route('/posts/delete/<int:id>')
+def delete_post(id):
+    # Grab post from database by id
+    post_to_delete = Post.query.get_or_404(id)
+    try:
+        db.session.delete(post_to_delete)
+        db.session.commit()
+        flash("Post has been deleted")
+        all_posts = Post.query.order_by(Post.date_posted)
+        return render_template('posts.html', all_posts=all_posts)
+
+    except:
+        flash('Some problems!')
+        all_posts = Post.query.order_by(Post.date_posted)
+        return render_template('posts.html', all_posts=all_posts)
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            # Check the hash, hash is taken from database unhashed and compared to password entered by user
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)
+                flash("Login Successfull!!")
+                return redirect(url_for('dashboard'))
+            else:
+                flash("Wrong Password or Username, please try again.")
+        else:
+            flash("User does not exist!")
+
+    return render_template('login.html', form=form)
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out ")
+    return redirect(url_for('login'))
+
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
 
 
 if __name__ == "__main__":
