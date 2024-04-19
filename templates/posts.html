@@ -11,16 +11,20 @@
 {% endfor %}
 
 </br>
-{% for post in all_posts %}
-    <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
-    <h4>{{ post.title }}</h4> </br>
-    <small>By: {{ post.author }} </br>
-        {{ post.date_posted }} </small>></br></br>
-    {{ post.content }} </br></br>
-        <a href="{{url_for('post', id=post.id)}}" class="btn btn-outline-secondary btn-sm">View Post</a>
-        <a href="{{url_for('edit_post', id=post.id)}}" class="btn btn-outline-secondary btn-sm">Edit Post</a>
+{% if current_user.is_authenticated %}
+    {% for post in all_posts %}
+        <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
+        <h4>{{ post.title }}</h4> </br>
+        <small>By: {{ post.author }} </br>
+            {{ post.date_posted }} </small>></br></br>
+        {{ post.content }} </br></br>
+            <a href="{{url_for('post', id=post.id)}}" class="btn btn-outline-secondary btn-sm">View Post</a>
+            <a href="{{url_for('edit_post', id=post.id)}}" class="btn btn-outline-secondary btn-sm">Edit Post</a>
 
-    </div>
-{% endfor %}
-
+        </div>
+    {% endfor %}
+{% else %}
+    <h3>Please log in to see the posts</h3></br>
+    <a href="{{ url_for('login') }}">Login</a>
+{% endif %}
 {% endblock %}

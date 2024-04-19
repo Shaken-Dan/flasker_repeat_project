@@ -10,30 +10,32 @@
 
 {% endfor %}
 
+{% if current_user.is_authenticated %}
+    <h1>Add Blog post!</h1>
 
-<h1>Add Blog post!</h1>
+    <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
+        <form method="POST">
+            {{ form.hidden_tag() }}
 
+            {{ form.title.label(class='form-label') }}
+            {{ form.title(class="form-control") }}
+            <br/>
+            {{ form.author.label(class='form-label') }}
+            {{ form.author(class="form-control") }}
+            <br/>
+            {{ form.slug.label(class='form-label') }}
+            {{ form.slug(class="form-control") }}
+            <br/>
+            {{ form.content.label(class='form-label') }}
+            {{ form.content(class="form-control", rows=5) }}
+            <br/>
+            {{ form.submit(class="btn btn-dark") }}
 
-<div class="shadow p-3 mb-5 bg-body-tertiary rounded">
-    <form method="POST">
-        {{ form.hidden_tag() }}
-
-        {{ form.title.label(class='form-label') }}
-        {{ form.title(class="form-control") }}
-        <br/>
-        {{ form.author.label(class='form-label') }}
-        {{ form.author(class="form-control") }}
-        <br/>
-        {{ form.slug.label(class='form-label') }}
-        {{ form.slug(class="form-control") }}
-        <br/>
-        {{ form.content.label(class='form-label') }}
-        {{ form.content(class="form-control", rows=5) }}
-        <br/>
-        {{ form.submit(class="btn btn-dark") }}
-
-    </form>
-</div>
-
+        </form>
+    </div>
+{% else %}
+    <h3>Please log in to add a post</h3></br>
+    <a href="{{ url_for('login') }}">Login</a>
+{% endif %}
 
 {% endblock %}

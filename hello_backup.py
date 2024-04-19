@@ -4,9 +4,11 @@ from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_login import UserMixin, LoginManager, login_required, login_user, logout_user, current_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
-
-from webforms import LoginForm, PostForm, PasswordForm, UserForm
+from wtforms import StringField, SubmitField, PasswordField
+from wtforms.validators import DataRequired, EqualTo
+from wtforms.widgets.core import TextArea
 
 app = Flask(__name__)
 # Add database
@@ -47,6 +49,15 @@ class Post(db.Model):
     slug = db.Column(db.String(255))
 
 
+# Create Blog Post Form
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = StringField('Content', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Author', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
 # Create Model for Data Base
 class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -74,6 +85,30 @@ class Users(db.Model, UserMixin):
     # Create a String
     def __repr__(self):
         return '<Name %r>' % self.name
+
+
+# Create a form class
+class UserForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    username = StringField("Username", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
+    favorite_color = StringField("Favorite Color")
+    password_hash = PasswordField("Password", validators=[DataRequired(),
+                                                          EqualTo("password_hash2", message="Passwords must match")])
+    password_hash2 = PasswordField("Confirm password", validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+class PasswordForm(FlaskForm):
+    email = StringField('What is your email?', validators=[DataRequired()])
+    password_hash = PasswordField('What is your password?', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 
 @app.route('/user/add', methods=['GET', 'POST'])
@@ -141,7 +176,6 @@ def name_view():
 
 
 @app.route("/update/<int:id>", methods=['POST', 'GET'])
-@login_required
 def update(id):
     form = UserForm()
     name_to_update = Users.query.get_or_404(id)

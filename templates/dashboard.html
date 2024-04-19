@@ -10,11 +10,55 @@
 
 {% endfor %}
 
+id: {{id}}</br>
+current_id: {{ current_user.id }}
 
-<h1>Dashboard</h1>
+<div class="card">
+  <div class="card-header">
+    {{ current_user.name }}
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">This is your info: </h5>
+    <p class="card-text">
+        <strong style="color:blue">Name:</strong> {{current_user.name}}</br>
+        <strong style="color:blue">Username:</strong> {{current_user.username}}</br>
+        <strong style="color:blue">ID:</strong> {{ current_user.id }}</br>
+        <strong style="color:blue">Email:</strong> {{ current_user.email }}</br>
+        <strong style="color:blue">Favorite color:</strong> {{ current_user.favorite_color }}</br>
+        <strong style="color:blue">Time logged in:</strong> {{ current_user.date_time }}
+    </p>
+    <a href="{{url_for('logout')}}" class="btn btn-secondary btn-sm">Log Out</a>
+    <a href="{{url_for('update', id=current_user.id)}}" class="btn btn-secondary btn-sm">Update Profile</a>
+    <a href="{{url_for('delete', id=current_user.id)}}" class="btn btn-danger btn-sm">Delete</a>
+  </div>
+</div>
 
-<p>Logged IN</p>
+</br>
 
-<a href="{{url_for('login')}}">Log Out</a>
+<div class="card">
+  <div class="card-header">
+    Update Profile
+  </div>
+  <div class="card-body">
+    <form action="/dashboard" method="POST">
+        {{ form.hidden_tag() }}
+
+        {{ form.name.label(class='form-label') }}
+        {{ form.name(class="form-control", value=name_to_update.name) }}
+        <br/>
+        {{ form.username.label(class='form-label') }}
+        {{ form.username(class="form-control", value=name_to_update.username) }}
+        <br/>
+        {{ form.email.label(class='form-label') }}
+        {{ form.email(class="form-control", value=name_to_update.email) }}
+        <br/>
+        {{ form.favorite_color.label(class='form-label') }}
+        {{ form.favorite_color(class="form-control", value=name_to_update.favorite_color) }}
+        <br/>
+        {{ form.submit(class="btn btn-secondary btn-sm") }}
+        <a href="{{url_for('delete', id=current_user.id)}}" class="btn btn-danger btn-sm"> Delete </a>
+    </form>
+  </div>
+</div>
 
 {% endblock %}
