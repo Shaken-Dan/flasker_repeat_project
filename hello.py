@@ -42,9 +42,11 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    author = db.Column(db.String(255))
+    # author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     slug = db.Column(db.String(255))
+    # Foreign key to link users (refer to primary keyof the user)
+    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
 # Create Model for Data Base
@@ -57,6 +59,8 @@ class Users(db.Model, UserMixin):
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     # Do some password stuff!
     password_hash = db.Column(db.String(128))
+    #User can have many posts
+    posts = db.relationship('Post', backref='poster')
 
     # password_hash2 = db.Column(db.String(128))
 
@@ -216,19 +220,21 @@ def test_pw():
 
 # Add a post page
 @app.route('/add-post', methods=['GET', 'POST'])
+@login_required
 def add_post():
     form = PostForm()
+    poster = current_user.id
     try:
         if form.validate_on_submit():
             post = Post(title=form.title.data,
                         content=form.content.data,
-                        author=form.author.data,
+                        poster_id=poster,
                         slug=form.slug.data)
 
             # Clear page data
             form.title.data = ''
             form.content.data = ''
-            form.author.data = ''
+            # form.author.data = ''
             form.slug.data = ''
 
             # Send data to database
@@ -245,7 +251,6 @@ def add_post():
 @app.route('/posts', methods=['GET', 'POST'])
 def posts():
     all_posts = Post.query.order_by(Post.date_posted)
-
     return render_template('posts.html', all_posts=all_posts)
 
 
@@ -260,21 +265,27 @@ def post(id):
 def edit_post(id):
     post_edit = Post.query.get_or_404(id)
     form = PostForm()
-    if form.validate_on_submit():
-        post_edit.title = form.title.data
-        post_edit.author = form.author.data
-        post_edit.slug = form.slug.data
-        post_edit.content = form.content.data
+    # Check up for authorization to edit the post
+    if post_edit.poster_id == current_user.id:
+        if form.validate_on_submit():
+            post_edit.title = form.title.data
+            # post_edit.author = form.author.data
+            post_edit.slug = form.slug.data
+            post_edit.content = form.content.data
 
-        # Update the database
-        db.session.add(post_edit)
-        db.session.commit()
-        flash('Post has been updated!')
-        return redirect(url_for('post', id=post_edit.id))
+            # Update the database
+            db.session.add(post_edit)
+            db.session.commit()
+            flash('Post has been updated!')
+            return redirect(url_for('post', id=post_edit.id))
+    else:
+        flash("Sorry but you are not authorized to edit this post!")
+        all_posts = Post.query.order_by(Post.date_posted)
+        return render_template('posts.html', all_posts=all_posts)
 
     # To show on a screen current data of a post
     form.title.data = post_edit.title
-    form.author.data = post_edit.author
+    # form.author.data = post_edit.author
     form.slug.data = post_edit.slug
     form.content.data = post_edit.content
 
@@ -285,18 +296,24 @@ def edit_post(id):
 def delete_post(id):
     # Grab post from database by id
     post_to_delete = Post.query.get_or_404(id)
-    try:
-        db.session.delete(post_to_delete)
-        db.session.commit()
-        flash("Post has been deleted")
+    id = current_user.id
+    if id == post_to_delete.poster.id:
+        print(post_to_delete, '/n', post_to_delete.poster, '/n', post_to_delete.poster.id)
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            flash("Post has been deleted")
+            all_posts = Post.query.order_by(Post.date_posted)
+            return render_template('posts.html', all_posts=all_posts)
+
+        except:
+            flash('Some problems!')
+            all_posts = Post.query.order_by(Post.date_posted)
+            return render_template('posts.html', all_posts=all_posts)
+    else:
+        flash("You are not authorized to delete that post.")
         all_posts = Post.query.order_by(Post.date_posted)
         return render_template('posts.html', all_posts=all_posts)
-
-    except:
-        flash('Some problems!')
-        all_posts = Post.query.order_by(Post.date_posted)
-        return render_template('posts.html', all_posts=all_posts)
-
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():

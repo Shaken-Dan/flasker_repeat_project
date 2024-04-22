@@ -14,14 +14,15 @@
 
 <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
 {{ post_id.title }} </br>
-<small>By: {{ post_id.author }} </br>
+<small>By: {{ post_id.poster.name }} </br>
     {{ post_id.date_posted }} </small>></br></br>
 {{ post_id.content }} </br>
 </div>
 
 <a href="{{url_for('posts')}}" class="btn btn-outline-secondary btn-sm">Back to Posts</a>
+{% if post_id.poster_id == current_user.id %}
 <a href="{{url_for('delete_post', id=post_id.id)}}" class="btn btn-outline-danger btn-sm">Delete Post</a>
 <a href="{{url_for('edit_post', id=post_id.id)}}" class="btn btn-outline-secondary btn-sm">Edit Post</a>
-
+{% endif %}
 
 {% endblock %}
