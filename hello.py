@@ -1,14 +1,18 @@
 from datetime import datetime, date
 
 from flask import Flask, render_template, flash, request, redirect, url_for
+from flask_ckeditor import CKEditor
 from flask_login import UserMixin, LoginManager, login_required, login_user, logout_user, current_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from webforms import LoginForm, PostForm, PasswordForm, UserForm
+from webforms import LoginForm, PostForm, PasswordForm, UserForm, SearchForm
 
 app = Flask(__name__)
+# Adding the rich content plug-in ckeditor
+ckeditor = CKEditor(app)
+
 # Add database
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db' # that one had problem with file directory location
 # Old SQLite DB
@@ -370,6 +374,33 @@ def dashboard():
                                name_to_update=name_to_update,
                                id=id)
     return render_template('dashboard.html')
+
+
+# Pass Stuff To Navbar
+@app.context_processor
+def base():
+    form = SearchForm()
+    return dict(form=form)
+
+
+@app.route("/search", methods=['POST'])
+def search():
+    form = SearchForm()
+    posts = Post.query
+    if form.validate_on_submit():
+        # Get data from submitted form
+        post.searched = form.searched.data
+
+        # Query the database
+        posts = posts.filter(Post.content.like("%" + post.searched + "%"))
+
+        # Returning the results in oreder way
+        posts = posts.order_by(Post.title).all()
+
+        return render_template("search.html",
+                               form=form,
+                               search_result=post.searched,
+                               posts=posts)
 
 
 if __name__ == "__main__":

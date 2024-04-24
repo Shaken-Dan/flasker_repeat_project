@@ -29,6 +29,10 @@
             {{ form.submit(class="btn btn-dark") }}
 
         </form>
+
+        {{ ckeditor.load() }}
+        {{ ckeditor.config(name='content') }}
+
     </div>
 {% else %}
     <h3>Please log in to add a post</h3></br>
