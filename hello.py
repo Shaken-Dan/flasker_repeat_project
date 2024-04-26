@@ -60,6 +60,7 @@ class Users(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=True)
     email = db.Column(db.String(200), nullable=False, unique=True)
     favorite_color = db.Column(db.String(200))
+    about_author = db.Column(db.Text(500), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     # Do some password stuff!
     password_hash = db.Column(db.String(128))
@@ -158,6 +159,8 @@ def update(id):
         name_to_update.username = request.form['username']
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
+        name_to_update.about_author = request.form['about_author']
+
         try:
             db.session.commit()
             flash("User Updated Successfully")
@@ -357,6 +360,7 @@ def dashboard():
         name_to_update.username = request.form['username']
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
+        name_to_update.about_author = request.form['about_author']
         try:
             db.session.commit()
             flash("User Updated Successfully")
@@ -401,6 +405,12 @@ def search():
                                form=form,
                                search_result=post.searched,
                                posts=posts)
+
+
+@app.route('/admin')
+@login_required
+def admin():
+    return render_template('admin.html')
 
 
 if __name__ == "__main__":

@@ -3,33 +3,42 @@
 {% block content %}
 
 {% for message in get_flashed_messages() %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+<div class="alert alert-success alert-dismissible fade show" role="alert" xmlns="http://www.w3.org/1999/html">
         {{message}}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
 {% endfor %}
 
-id: {{id}}</br>
-current_id: {{ current_user.id }}
 
 <div class="card">
   <div class="card-header">
     {{ current_user.name }}
   </div>
   <div class="card-body">
-    <h5 class="card-title">This is your info: </h5>
     <p class="card-text">
-        <strong style="color:blue">Name:</strong> {{current_user.name}}</br>
+      <div class="container">
+      <div class="row">
+      <div class="col-8">
+
+      <strong style="color:blue">Name:</strong> {{current_user.name}}</br>
         <strong style="color:blue">Username:</strong> {{current_user.username}}</br>
         <strong style="color:blue">ID:</strong> {{ current_user.id }}</br>
         <strong style="color:blue">Email:</strong> {{ current_user.email }}</br>
         <strong style="color:blue">Favorite color:</strong> {{ current_user.favorite_color }}</br>
-        <strong style="color:blue">Time logged in:</strong> {{ current_user.date_time }}
+        <strong style="color:blue">About Author:</strong> {{ current_user.about_author }}</br>
+          <strong style="color:blue">Time logged in:</strong> {{ current_user.date_time }}
     </p>
     <a href="{{url_for('logout')}}" class="btn btn-secondary btn-sm">Log Out</a>
     <a href="{{url_for('update', id=current_user.id)}}" class="btn btn-secondary btn-sm">Update Profile</a>
     <a href="{{url_for('delete', id=current_user.id)}}" class="btn btn-danger btn-sm">Delete</a>
+    </br></br>
+      </div>
+      <div class="col-4">
+          <img src="{{ url_for('static', filename='images/default_pic.jpg') }}" width="200" align="right">
+      </div>
+      </div>
+      </div>
   </div>
 </div>
 
@@ -54,6 +63,9 @@ current_id: {{ current_user.id }}
         <br/>
         {{ form.favorite_color.label(class='form-label') }}
         {{ form.favorite_color(class="form-control", value=name_to_update.favorite_color) }}
+        <br/>
+        {{ form.about_author.label(class='form-label') }}
+        <textarea name="about_author" class="form-control">{{ name_to_update.about_author }}</textarea>
         <br/>
         {{ form.submit(class="btn btn-secondary btn-sm") }}
         <a href="{{url_for('delete', id=current_user.id)}}" class="btn btn-danger btn-sm"> Delete </a>

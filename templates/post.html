@@ -15,8 +15,9 @@
 <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
 {{ post_id.title }} </br>
 <small>By: {{ post_id.poster.name }} </br>
-    {{ post_id.date_posted }} </small>></br></br>
+{{ post_id.date_posted }} </small>></br></br>
 {{ post_id.content | safe }} </br>
+<strong> About autor:</strong> {{ post_id.poster.about_author}}
 </div>
 
 <a href="{{url_for('posts')}}" class="btn btn-outline-secondary btn-sm">Back to Posts</a>

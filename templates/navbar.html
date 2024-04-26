@@ -19,6 +19,11 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
           </li>
+          {% if current_user.id == 8 %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+          </li>
+          {% endif %}
         {% else %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('login') }}">Login</a>
